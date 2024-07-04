@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <title>Test03</title>
+</head>
+<body>
+    <canvas id="glCanvas"></canvas>
+
+    <script id="vertex-shader-2d" type="notjs">
+        attribute vec2 a_position;
+
+        uniform vec2 u_resolution;
+
+        void main() {
+            // convert the position from pixel to 0.0 to 1.0
+            vec2 zeroToOne = a_position / u_resolution;
+
+            //convert from 0->1 to 0->2
+            vec2 zeroToTwo = zeroToOne * 2.0;
+
+            //convert from 0->2 to -1->+1 (clip space)
+            vec2 clipSpace = zeroToTwo - 1.0;
+
+            gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+        }
+    </script>
+    <script id="fragment-shader-2d" type="notjs">
+        precision mediump float;
+
+        uniform vec4 u_color;
+
+        void main() {
+            gl_FragColor = u_color;
+        }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
