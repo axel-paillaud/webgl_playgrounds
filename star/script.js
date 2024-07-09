@@ -132,6 +132,7 @@ function main() {
     gl.uniform4fv(colorLocation, color);
 
     // Draw the circle.
+    // DELETE
     var primitiveType = gl.TRIANGLE_FAN;
     var offset = 0;
     var count = 102;
@@ -139,22 +140,7 @@ function main() {
   }
 }
 
-// Fill the buffer with the values that define a rectangle.
-function setRectangle(gl, x, y, width, height) {
-  var x1 = x;
-  var x2 = x + width;
-  var y1 = y;
-  var y2 = y + height;
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-     x1, y1,
-     x2, y1,
-     x1, y2,
-     x1, y2,
-     x2, y1,
-     x2, y2,
-  ]), gl.STATIC_DRAW);
-}
-
+// DELETE
 function setCircle(gl, centerX, centerY, radius, numSegments) {
     var vertices = []; 
 
@@ -168,6 +154,11 @@ function setCircle(gl, centerX, centerY, radius, numSegments) {
     vertices.push(centerX + radius, centerY); // Ajouter le premier point du périmètre pour fermer le cercle
 
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+}
+
+// Create star 
+function setStar(gl, numPoints) {
+    var vertices = [];
 }
 
 main();
