@@ -6,8 +6,13 @@ var vertexShaderSource = `#version 300 es
 // It will receive data from a buffer
 in vec2 a_position;
 
+// add color for each triangle
+in vec4 a_color;
+
 // Used to pass in the resolution of the canvas
 uniform vec2 u_resolution;
+
+out vec4 v_color;
 
 // all shaders have a main function
 void main() {
@@ -22,6 +27,7 @@ void main() {
   vec2 clipSpace = zeroToTwo - 1.0;
 
   gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+  v_color = a_color;
 }
 `;
 
@@ -31,11 +37,13 @@ precision highp float;
 
 uniform vec4 u_color;
 
+in vec4 v_color;
+
 // we need to declare an output for the fragment shader
 out vec4 outColor;
 
 void main() {
-  outColor = u_color;
+  outColor = v_color;
 }
 `;
 
@@ -129,10 +137,8 @@ function main() {
     // Update the position buffer with star positions
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-    let starVertices = setStar(gl, outerRadius, innerRadius, numPoints, translation[0], translation[1]);
-
-    // Set a random color.
-    gl.uniform4fv(colorLocation, color);
+    var starVertices = setStar(gl, outerRadius, innerRadius, numPoints, translation[0], translation[1]);
+    var colors = generateColors(starVertices.length / 2);
 
     // Draw the star.
     var primitiveType = gl.TRIANGLE_FAN;
@@ -143,24 +149,32 @@ function main() {
 }
 
 function setStar(gl, outerRadius, innerRadius, numPoints, centerX, centerY) {
-  var vertices = [centerX, centerY]; // Add center vertex for TRIANGLE_FAN
-  var angleStep = Math.PI / numPoints;
-  var startAngle = -Math.PI / 2;
+    var vertices = [centerX, centerY]; // Add center vertex for TRIANGLE_FAN
+    var angleStep = Math.PI / numPoints;
+    var startAngle = -Math.PI / 2;
 
-  for (var i = 0; i < 2 * numPoints; i++) {
-    var radius = (i % 2 === 0) ? outerRadius : innerRadius;
-    var angle = startAngle + i * angleStep;
-    var x = centerX + radius * Math.cos(angle);
-    var y = centerY + radius * Math.sin(angle);
-    vertices.push(x, y);
-  }
+    for (var i = 0; i < 2 * numPoints; i++) {
+        var radius = (i % 2 === 0) ? outerRadius : innerRadius;
+        var angle = startAngle + i * angleStep;
+        var x = centerX + radius * Math.cos(angle);
+        var y = centerY + radius * Math.sin(angle);
+        vertices.push(x, y);
+    }
 
-  // Close the fan by adding the first outer vertex at the end
-  vertices.push(vertices[2], vertices[3]);
+    // Close the fan by adding the first outer vertex at the end
+    vertices.push(vertices[2], vertices[3]);
 
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-  return vertices;
+    return vertices;
+}
+
+function generateColors(numVertices) {
+    var colors = [];
+    for (var i = 0; i < numVertices; i++) {
+        colors.push(Math.random(), Math.random(), Math.random(), 1);
+    }
+    return colors;
 }
 
 main();
