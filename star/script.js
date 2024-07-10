@@ -142,25 +142,25 @@ function main() {
   }
 }
 
-// Create star 
 function setStar(gl, outerRadius, innerRadius, numPoints, centerX, centerY) {
-    var vertices = [];
-    var angleStep = Math.PI / numPoints;
+  var vertices = [centerX, centerY]; // Add center vertex for TRIANGLE_FAN
+  var angleStep = Math.PI / numPoints;
+  var startAngle = -Math.PI / 2;
 
-    for (var i = 0; i < 2 * numPoints; i++) {
-        var radius = (i % 2 === 0) ? outerRadius : innerRadius;
-        var angle = i * angleStep;
-        var x = centerX + radius * Math.cos(angle);
-        var y = centerY + radius * Math.sin(angle);
-        vertices.push(x, y);
-    }
+  for (var i = 0; i < 2 * numPoints; i++) {
+    var radius = (i % 2 === 0) ? outerRadius : innerRadius;
+    var angle = startAngle + i * angleStep;
+    var x = centerX + radius * Math.cos(angle);
+    var y = centerY + radius * Math.sin(angle);
+    vertices.push(x, y);
+  }
 
-    // Répéter le premier sommet du périmètre pour fermer le fan
-    vertices.push(vertices[2], vertices[3]);
+  // Close the fan by adding the first outer vertex at the end
+  vertices.push(vertices[2], vertices[3]);
 
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-    return vertices;
+  return vertices;
 }
 
 main();
