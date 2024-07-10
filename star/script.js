@@ -126,39 +126,20 @@ function main() {
     // pixels to clipspace in the shader
     gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
 
-    // Update the position buffer with rectangle positions
+    // Update the position buffer with star positions
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-    // setRectangle(gl, translation[0], translation[1], width, height);
-    setCircle(gl, translation[0], translation[1], radius, 100);
-    setStar(gl, outerRadius, innerRadius, numPoints, translation[0], translation[1]);
+    let starVertices = setStar(gl, outerRadius, innerRadius, numPoints, translation[0], translation[1]);
 
     // Set a random color.
     gl.uniform4fv(colorLocation, color);
 
-    // Draw the circle.
-    // DELETE
+    // Draw the star.
     var primitiveType = gl.TRIANGLE_FAN;
     var offset = 0;
-    var count = 102;
+    var count = starVertices.length / 2;
     gl.drawArrays(primitiveType, offset, count);
   }
-}
-
-// DELETE
-function setCircle(gl, centerX, centerY, radius, numSegments) {
-    var vertices = []; 
-
-    for (let i = 0; i <= numSegments; i++) {
-        var angle = 2 * Math.PI * i / numSegments; 
-        var x = centerX + radius * Math.cos(angle);
-        var y = centerY + radius * Math.sin(angle);
-        vertices.push(x, y);
-    }
-
-    vertices.push(centerX + radius, centerY); // Ajouter le premier point du périmètre pour fermer le cercle
-
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 }
 
 // Create star 
@@ -173,7 +154,13 @@ function setStar(gl, outerRadius, innerRadius, numPoints, centerX, centerY) {
         var y = centerY + radius * Math.sin(angle);
         vertices.push(x, y);
     }
+
+    // Répéter le premier sommet du périmètre pour fermer le fan
+    vertices.push(vertices[2], vertices[3]);
+
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+    return vertices;
 }
 
 main();
