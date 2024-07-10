@@ -62,13 +62,16 @@ function main() {
 
   // look up where the vertex data needs to go.
   var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+  var colorAttributeLocation = gl.getAttribLocation(program, "a_color");
 
   // look up uniform locations
   var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
-  var colorLocation = gl.getUniformLocation(program, "u_color");
 
   // Create a buffer
   var positionBuffer = gl.createBuffer();
+
+  // Create color buffer
+  var colorBuffer = gl.createBuffer();
 
   // Create a vertex array object (attribute state)
   var vao = gl.createVertexArray();
@@ -92,9 +95,9 @@ function main() {
       positionAttributeLocation, size, type, normalize, stride, offset
     );
 
-  // First let's make some variables
-  // to hold the translation, width and height of the rectangle
-    var color = [Math.random(), Math.random(), Math.random(), 1];
+  gl.enableVertexAttribArray(colorAttributeLocation);
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  gl.vertexAttribPointer(colorAttributeLocation, 4, gl.FLOAT, false, 0, 0);
 
     var translation = [canvas.width / 2, canvas.height / 2];
     var outerRadius = 100;
@@ -139,6 +142,9 @@ function main() {
 
     var starVertices = setStar(gl, outerRadius, innerRadius, numPoints, translation[0], translation[1]);
     var colors = generateColors(starVertices.length / 2);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
     // Draw the star.
     var primitiveType = gl.TRIANGLE_FAN;
