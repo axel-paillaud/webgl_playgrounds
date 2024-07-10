@@ -86,11 +86,14 @@ function main() {
 
   // First let's make some variables
   // to hold the translation, width and height of the rectangle
-  var translation = [canvas.width / 2, canvas.height / 2];
-  var radius = 100;
-  var color = [Math.random(), Math.random(), Math.random(), 1];
+    var color = [Math.random(), Math.random(), Math.random(), 1];
 
-  drawScene();
+    var translation = [canvas.width / 2, canvas.height / 2];
+    var outerRadius = 100;
+    var innerRadius = 50;
+    var numPoints = 5;
+
+    drawScene();
 
   // Setup a ui.
   webglLessonsUI.setupSlider("#x", {slide: updatePosition(0), max: gl.canvas.width });
@@ -125,8 +128,10 @@ function main() {
 
     // Update the position buffer with rectangle positions
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
     // setRectangle(gl, translation[0], translation[1], width, height);
     setCircle(gl, translation[0], translation[1], radius, 100);
+    setStar(gl, outerRadius, innerRadius, numPoints, translation[0], translation[1]);
 
     // Set a random color.
     gl.uniform4fv(colorLocation, color);
@@ -157,8 +162,18 @@ function setCircle(gl, centerX, centerY, radius, numSegments) {
 }
 
 // Create star 
-function setStar(gl, numPoints) {
+function setStar(gl, outerRadius, innerRadius, numPoints, centerX, centerY) {
     var vertices = [];
+    var angleStep = Math.PI / numPoints;
+
+    for (var i = 0; i < 2 * numPoints; i++) {
+        var radius = (i % 2 === 0) ? outerRadius : innerRadius;
+        var angle = i * angleStep;
+        var x = centerX + radius * Math.cos(angle);
+        var y = centerY + radius * Math.sin(angle);
+        vertices.push(x, y);
+    }
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 }
 
 main();
