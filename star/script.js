@@ -26,6 +26,7 @@ void main() {
   // convert from 0->2 to -1->+1 (clipspace)
   vec2 clipSpace = zeroToTwo - 1.0;
 
+  // set origin to top-left instead of bot-left (2D convention)
   gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
   v_color = a_color;
 }
