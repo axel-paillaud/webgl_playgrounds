@@ -9,19 +9,31 @@ in vec2 a_position;
 // Used to pass in the resolution of the canvas
 uniform vec2 u_resolution;
 
+// Rotate the whole geometry
+uniform vec2 u_rotation
+
+uniform vec2 u_translation
+
 // all shaders have a main function
 void main() {
 
-  // convert the position from pixels to 0.0 to 1.0
-  vec2 zeroToOne = a_position / u_resolution;
+vec2 rotatedPosition = vec2(
+    a_position.x * u_rotation.y + a_position.y * u_rotation.x,
+    a_position.y * u_rotation.y - a_position.x * u_rotation.x    
+);
 
-  // convert from 0->1 to 0->2
-  vec2 zeroToTwo = zeroToOne * 2.0;
+vec2 position = rotatedPosition + u_translation;
 
-  // convert from 0->2 to -1->+1 (clipspace)
-  vec2 clipSpace = zeroToTwo - 1.0;
+// convert the position from pixels to 0.0 to 1.0
+vec2 zeroToOne = position / u_resolution;
 
-  gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+// convert from 0->1 to 0->2
+vec2 zeroToTwo = zeroToOne * 2.0;
+
+// convert from 0->2 to -1->+1 (clipspace)
+vec2 clipSpace = zeroToTwo - 1.0;
+
+gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
 }
 `;
 
@@ -35,132 +47,149 @@ uniform vec4 u_color;
 out vec4 outColor;
 
 void main() {
-  outColor = u_color;
+outColor = u_color;
 }
 `;
 
 function main() {
-  // Get A WebGL context
-  /** @type {HTMLCanvasElement} */
-  var canvas = document.querySelector("#canvas");
-  var gl = canvas.getContext("webgl2");
-  if (!gl) {
-    return;
-  }
+    // Get A WebGL context
+    /** @type {HTMLCanvasElement} */
+    var canvas = document.querySelector("#canvas");
+    var gl = canvas.getContext("webgl2");
+    if (!gl) {
+        return;
+    }
 
-  // Use our boilerplate utils to compile the shaders and link into a program
-  var program = webglUtils.createProgramFromSources(gl,
-      [vertexShaderSource, fragmentShaderSource]);
+    // Use our boilerplate utils to compile the shaders and link into a program
+    var program = webglUtils.createProgramFromSources(gl,
+        [vertexShaderSource, fragmentShaderSource]);
 
-  // look up where the vertex data needs to go.
-  var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+    // look up where the vertex data needs to go.
+    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
 
-  // look up uniform locations
-  var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
-  var colorLocation = gl.getUniformLocation(program, "u_color");
+    // look up uniform locations
+    var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+    var colorLocation = gl.getUniformLocation(program, "u_color");
+    var translationLocation = gl.getUniformLocation(program, "u_translation");
+    var rotationLocation = gl.getUniformLocation(program, "u_rotation");
 
-  // Create a buffer
-  var positionBuffer = gl.createBuffer();
+    // Create a buffer
+    var positionBuffer = gl.createBuffer();
 
-  // Create a vertex array object (attribute state)
-  var vao = gl.createVertexArray();
+    // Create a vertex array object (attribute state)
+    var vao = gl.createVertexArray();
 
-  // and make it the one we're currently working with
-  gl.bindVertexArray(vao);
+    // and make it the one we're currently working with
+    gl.bindVertexArray(vao);
 
-  // Turn on the attribute
-  gl.enableVertexAttribArray(positionAttributeLocation);
+    // Turn on the attribute
+    gl.enableVertexAttribArray(positionAttributeLocation);
 
-  // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-  // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-  var size = 2;          // 2 components per iteration
-  var type = gl.FLOAT;   // the data is 32bit floats
-  var normalize = false; // don't normalize the data
-  var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-  var offset = 0;        // start at the beginning of the buffer
-  gl.vertexAttribPointer(
-      positionAttributeLocation, size, type, normalize, stride, offset
+    // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+    var size = 2;          // 2 components per iteration
+    var type = gl.FLOAT;   // the data is 32bit floats
+    var normalize = false; // don't normalize the data
+    var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+    var offset = 0;        // start at the beginning of the buffer
+    gl.vertexAttribPointer(
+        positionAttributeLocation, size, type, normalize, stride, offset
     );
 
-  // First let's make some variables
-  // to hold the translation, width and height of the rectangle
+    // Get real canvas size event at first DOM render
+    webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+
+    // First let's make some variables
+    // to hold the translation, width and height of the rectangle
     var color = [Math.random(), Math.random(), Math.random(), 1];
 
     var translation = [canvas.width / 2, canvas.height / 2];
+    var rotation = [0, 1];
     var outerRadius = 100;
     var innerRadius = 50;
     var numPoints = 5;
 
-    drawScene();
-
-  // Setup a ui.
-  webglLessonsUI.setupSlider("#x", {slide: updatePosition(0), max: gl.canvas.width });
-  webglLessonsUI.setupSlider("#y", {slide: updatePosition(1), max: gl.canvas.height});
-
-  function updatePosition(index) {
-    return function(event, ui) {
-      translation[index] = ui.value;
-      drawScene();
-    };
-  }
-
-  function drawScene() {
-    webglUtils.resizeCanvasToDisplaySize(gl.canvas);
-
-    // Tell WebGL how to convert from clip space to pixels
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-    // Clear the canvas
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    // Tell it to use our program (pair of shaders)
-    gl.useProgram(program);
-
-    // Bind the attribute/buffer set we want.
-    gl.bindVertexArray(vao);
-
-    // Pass in the canvas resolution so we can convert from
-    // pixels to clipspace in the shader
-    gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-
-    // Update the position buffer with star positions
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
     let starVertices = setStar(gl, outerRadius, innerRadius, numPoints, translation[0], translation[1]);
 
-    // Set a random color.
-    gl.uniform4fv(colorLocation, color);
+    drawScene();
 
-    // Draw the star.
-    var primitiveType = gl.TRIANGLE_FAN;
-    var offset = 0;
-    var count = starVertices.length / 2;
-    gl.drawArrays(primitiveType, offset, count);
-  }
+    // Setup a ui.
+    webglLessonsUI.setupSlider("#x", {slide: updatePosition(0), max: gl.canvas.width });
+    webglLessonsUI.setupSlider("#y", {slide: updatePosition(1), max: gl.canvas.height});
+    webglLessonsUI.setupSlider("#angle", {slide: updateAngle, max: 360});
+
+    function updatePosition(index) {
+        return function(event, ui) {
+            translation[index] = ui.value;
+            drawScene();
+        };
+    }
+
+    function updateAngle(event, ui) {
+        var angleInDegrees = 360 - ui.value;
+        var angleInRadians = angleInDegrees * Math.PI / 180;
+        rotation[0] = Math.sin(angleInRadians);
+        rotation[1] = Math.cos(angleInDegrees);
+        drawScene();
+    }
+
+    function drawScene() {
+        webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+
+        // Tell WebGL how to convert from clip space to pixels
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+        // Clear the canvas
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // Tell it to use our program (pair of shaders)
+        gl.useProgram(program);
+
+        // Bind the attribute/buffer set we want.
+        gl.bindVertexArray(vao);
+
+        // Pass in the canvas resolution so we can convert from
+        // pixels to clipspace in the shader
+        gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+
+        // Update the position buffer with star positions
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+
+        // Set a random color.
+        gl.uniform4fv(colorLocation, color);
+
+        // Draw the star.
+        var primitiveType = gl.TRIANGLE_FAN;
+        var offset = 0;
+        var count = starVertices.length / 2;
+        gl.drawArrays(primitiveType, offset, count);
+    }
 }
 
 function setStar(gl, outerRadius, innerRadius, numPoints, centerX, centerY) {
-  var vertices = [centerX, centerY]; // Add center vertex for TRIANGLE_FAN
-  var angleStep = Math.PI / numPoints;
-  var startAngle = -Math.PI / 2;
+    var vertices = [centerX, centerY]; // Add center vertex for TRIANGLE_FAN
+    var angleStep = Math.PI / numPoints;
+    var startAngle = -Math.PI / 2;
 
-  for (var i = 0; i < 2 * numPoints; i++) {
-    var radius = (i % 2 === 0) ? outerRadius : innerRadius;
-    var angle = startAngle + i * angleStep;
-    var x = centerX + radius * Math.cos(angle);
-    var y = centerY + radius * Math.sin(angle);
-    vertices.push(x, y);
-  }
+    for (var i = 0; i < 2 * numPoints; i++) {
+        var radius = (i % 2 === 0) ? outerRadius : innerRadius;
+        var angle = startAngle + i * angleStep;
+        var x = centerX + radius * Math.cos(angle);
+        var y = centerY + radius * Math.sin(angle);
+        vertices.push(x, y);
+    }
 
-  // Close the fan by adding the first outer vertex at the end
-  vertices.push(vertices[2], vertices[3]);
+    // Close the fan by adding the first outer vertex at the end
+    vertices.push(vertices[2], vertices[3]);
 
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-  return vertices;
+    return vertices;
 }
 
 main();
