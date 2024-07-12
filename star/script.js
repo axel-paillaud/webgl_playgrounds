@@ -46,6 +46,12 @@ async function main() {
     // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
+    var outerRadius = 100;
+    var innerRadius = 50;
+    var numPoints = 5;
+
+    let starVertices = setStar(gl, outerRadius, innerRadius, numPoints, 0, 0);
+
     // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
     var size = 2;          // 2 components per iteration
     var type = gl.FLOAT;   // the data is 32bit floats
@@ -56,21 +62,11 @@ async function main() {
         positionAttributeLocation, size, type, normalize, stride, offset
     );
 
-    // Get real canvas size event at first DOM render
-    webglUtils.resizeCanvasToDisplaySize(gl.canvas);
-
     // First let's make some variables
-    // to hold the translation, width and height of the rectangle
-    var color = [Math.random(), Math.random(), Math.random(), 1];
-
-    var translation = [canvas.width / 2, canvas.height / 2];
+    // to hold the translation, rotation, color 
+    var translation = [0, 0];
     var rotation = [0, 1];
-    var outerRadius = 100;
-    var innerRadius = 50;
-    var numPoints = 5;
-
-
-    let starVertices = setStar(gl, outerRadius, innerRadius, numPoints, translation[0], translation[1]);
+    var color = [Math.random(), Math.random(), Math.random(), 1];
 
     drawScene();
 
@@ -90,7 +86,7 @@ async function main() {
         var angleInDegrees = 360 - ui.value;
         var angleInRadians = angleInDegrees * Math.PI / 180;
         rotation[0] = Math.sin(angleInRadians);
-        rotation[1] = Math.cos(angleInDegrees);
+        rotation[1] = Math.cos(angleInRadians);
         drawScene();
     }
 
@@ -117,9 +113,14 @@ async function main() {
         // Update the position buffer with star positions
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-
         // Set a random color.
         gl.uniform4fv(colorLocation, color);
+
+        // Set the translation.
+        gl.uniform2fv(translationLocation, translation);
+
+        // Set the rotation
+        gl.uniform2fv(rotationLocation, rotation);
 
         // Draw the star.
         var primitiveType = gl.TRIANGLE_FAN;
