@@ -4,13 +4,9 @@
 // It will receive data from a buffer
 in vec2 a_position;
 
-// Used to pass in the resolution of the canvas
 uniform vec2 u_resolution;
-
-// Rotate the whole geometry
-uniform vec2 u_rotation
-
-uniform vec2 u_translation
+uniform vec2 u_translation;
+uniform vec2 u_rotation;
 
 // all shaders have a main function
 void main() {

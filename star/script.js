@@ -62,8 +62,6 @@ async function main() {
         positionAttributeLocation, size, type, normalize, stride, offset
     );
 
-    // First let's make some variables
-    // to hold the translation, rotation, color 
     var translation = [0, 0];
     var rotation = [0, 1];
     var color = [Math.random(), Math.random(), Math.random(), 1];
