@@ -30,6 +30,7 @@ async function main() {
     var colorLocation = gl.getUniformLocation(program, "u_color");
     var translationLocation = gl.getUniformLocation(program, "u_translation");
     var rotationLocation = gl.getUniformLocation(program, "u_rotation");
+    var scaleLocation = gl.getUniformLocation(program, "u_scale");
 
     // Create a buffer
     var positionBuffer = gl.createBuffer();
@@ -64,6 +65,7 @@ async function main() {
 
     var translation = [0, 0];
     var rotation = [0, 1];
+    var scale = [1, 1];
     var color = [Math.random(), Math.random(), Math.random(), 1];
 
     drawScene();
@@ -72,6 +74,8 @@ async function main() {
     webglLessonsUI.setupSlider("#x", {slide: updatePosition(0), max: gl.canvas.width });
     webglLessonsUI.setupSlider("#y", {slide: updatePosition(1), max: gl.canvas.height});
     webglLessonsUI.setupSlider("#angle", {slide: updateAngle, max: 360});
+    webglLessonsUI.setupSlider("#scaleX", {value: scale[0], slide: updateScale(0), min: -5, max: 5, step: 0.01, precision: 2});
+    webglLessonsUI.setupSlider("#scaleY", {value: scale[1], slide: updateScale(1), min: -5, max: 5, step: 0.01, precision: 2});
 
     function updatePosition(index) {
         return function(event, ui) {
@@ -86,6 +90,13 @@ async function main() {
         rotation[0] = Math.sin(angleInRadians);
         rotation[1] = Math.cos(angleInRadians);
         drawScene();
+    }
+
+    function updateScale(index) {
+        return function(event, ui) {
+            scale[index] = ui.value;
+            drawScene();
+        }
     }
 
     function drawScene() {
@@ -114,11 +125,9 @@ async function main() {
         // Set a random color.
         gl.uniform4fv(colorLocation, color);
 
-        // Set the translation.
         gl.uniform2fv(translationLocation, translation);
-
-        // Set the rotation
         gl.uniform2fv(rotationLocation, rotation);
+        gl.uniform2fv(scaleLocation, scale);
 
         // Draw the star.
         var primitiveType = gl.TRIANGLE_FAN;
